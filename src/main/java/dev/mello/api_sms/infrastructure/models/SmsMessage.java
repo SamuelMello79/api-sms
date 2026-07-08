@@ -1,4 +1,4 @@
-package dev.mello.api_sms.infrastructure.model;
+package dev.mello.api_sms.infrastructure.models;
 
 import dev.mello.api_sms.infrastructure.enums.ShippingStatus;
 import jakarta.persistence.*;
@@ -14,6 +14,9 @@ public class SmsMessage {
 
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
+
+    @Column(name = "message", nullable = false, length = 150)
+    private String message;
 
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
