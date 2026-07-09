@@ -2,10 +2,16 @@ package dev.mello.api_sms.infrastructure.models;
 
 import dev.mello.api_sms.infrastructure.enums.ShippingStatus;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Builder
+@Table(name = "sms_message")
+@Getter @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class SmsMessage {
 
     @Id
