@@ -1,6 +1,6 @@
 package dev.mello.api_sms.api.dtos;
 
-import dev.mello.api_sms.infrastructure.enums.ShippingStatus;
+import dev.mello.api_sms.infrastructure.enums.SmsStatusEnum;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -9,10 +9,10 @@ import java.time.LocalDateTime;
 @Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class SmsMessageDTOResponse {
+public class SmsResponseDTO {
     private Long id;
     private String phoneNumber;
     private String message;
-    private ShippingStatus status;
+    private SmsStatusEnum status;
     private LocalDateTime sentAt;
 }
