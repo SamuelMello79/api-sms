@@ -9,6 +9,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface SmsMessageRepository extends JpaRepository<SmsEntity, Long> {
+public interface SmsRepository extends JpaRepository<SmsEntity, Long> {
     List<SmsEntity> findBySentAtBetweenAndStatus(LocalDateTime init, LocalDateTime end, SmsStatusEnum status);
 }

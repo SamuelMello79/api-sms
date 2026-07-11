@@ -30,7 +30,7 @@ public class SmsMapperTest {
 
         smsEntity = SmsEntity.builder()
                 .id(1L)
-                .phoneNumber("+5515996669999")
+                .phoneNumber("15996669999")
                 .message("Hello")
                 .status(SmsStatusEnum.SENT)
                 .sentAt(LocalDateTime.parse("2026-07-11T14:36:00"))
@@ -38,14 +38,14 @@ public class SmsMapperTest {
 
 
         requestDTO = SmsRequestDTOFixture.build(
-                "+5515996669999",
+                "15996669999",
                 "Hello"
         );
 
 
         responseDTO = SmsResponseDTOFixture.build(
                 1L,
-                "+5515996669999",
+                "15996669999",
                 "Hello",
                 SmsStatusEnum.SENT,
                 LocalDateTime.parse("2026-07-11T14:36:00")
