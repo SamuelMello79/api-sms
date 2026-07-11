@@ -5,9 +5,12 @@ import dev.mello.api_sms.api.dtos.SmsResponseDTO;
 import dev.mello.api_sms.business.mappers.SmsMapper;
 import dev.mello.api_sms.infrastructure.enums.SmsStatusEnum;
 import dev.mello.api_sms.infrastructure.entities.SmsEntity;
+import dev.mello.api_sms.infrastructure.exceptions.NotFoundException;
+import dev.mello.api_sms.infrastructure.exceptions.SmsGatewayException;
 import dev.mello.api_sms.infrastructure.gateway.SmsGateway;
 import dev.mello.api_sms.infrastructure.repositories.SmsMessageRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -33,7 +36,7 @@ public class SmsService {
             );
 
             entity.setStatus(SmsStatusEnum.SENT);
-        } catch (Exception e) {
+        } catch (SmsGatewayException e) {
             entity.setStatus(SmsStatusEnum.SEND_ERROR);
         }
 
@@ -61,6 +64,6 @@ public class SmsService {
 
     private SmsEntity existsById(Long id) {
         return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("SMS not founded"));
+                .orElseThrow(() -> new NotFoundException("SMS not founded"));
     }
 }
