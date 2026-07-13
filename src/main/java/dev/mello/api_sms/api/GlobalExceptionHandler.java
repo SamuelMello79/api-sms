@@ -3,6 +3,7 @@ package dev.mello.api_sms.api;
 import dev.mello.api_sms.api.dtos.ErrorResponseDTO;
 import dev.mello.api_sms.infrastructure.exceptions.BadRequestException;
 import dev.mello.api_sms.infrastructure.exceptions.NotFoundException;
+import dev.mello.api_sms.infrastructure.exceptions.SmsGatewayException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -24,9 +25,15 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<ErrorResponseDTO> handlerNotFoundException(BadRequestException ex) {
+    public ResponseEntity<ErrorResponseDTO> handlerBadRequestException(BadRequestException ex) {
         return ResponseEntity.status(BAD_REQUEST)
-                .body(build(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage()));
+                .body(build(BAD_REQUEST, "Bad Request", ex.getMessage()));
+    }
+
+    @ExceptionHandler(SmsGatewayException.class)
+    public ResponseEntity<ErrorResponseDTO> handlerBadRequestException(SmsGatewayException ex) {
+        return ResponseEntity.status(GATEWAY_TIMEOUT)
+                .body(build(GATEWAY_TIMEOUT, "Gateway Exception", ex.getMessage()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

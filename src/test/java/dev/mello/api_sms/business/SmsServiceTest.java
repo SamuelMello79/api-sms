@@ -9,6 +9,8 @@ import dev.mello.api_sms.business.services.SmsService;
 import dev.mello.api_sms.infrastructure.config.DateTimeProvider;
 import dev.mello.api_sms.infrastructure.entities.SmsEntity;
 import dev.mello.api_sms.infrastructure.enums.SmsStatusEnum;
+import dev.mello.api_sms.infrastructure.exceptions.NotFoundException;
+import dev.mello.api_sms.infrastructure.exceptions.SmsGatewayException;
 import dev.mello.api_sms.infrastructure.gateway.SmsGateway;
 import dev.mello.api_sms.infrastructure.repositories.SmsRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -119,6 +121,14 @@ public class SmsServiceTest {
                 LocalDateTime.parse("2026-07-11T14:36:00")
         );
 
+        smsErrorResponseDTO = SmsResponseDTOFixture.build(
+                1L,
+                "15996669999",
+                "Hello",
+                SmsStatusEnum.SEND_ERROR,
+                LocalDateTime.parse("2026-07-11T14:36:00")
+        );
+
         smsEntityList = List.of(
                 smsEntitySaved,
                 smsEntitySaved2
@@ -160,6 +170,58 @@ public class SmsServiceTest {
                         smsEntityMapped.getPhoneNumber(),
                         smsEntityMapped.getMessage()
                 );
+    }
+
+    @Test
+    @DisplayName("Must save SMS with SEND_ERROR when gateway fails")
+    void mustSaveSmsWithErrorWhenGatewayFails() {
+
+        when(smsMapper.toEntity(smsRequestDTO))
+                .thenReturn(smsEntityMapped);
+
+        doThrow(new SmsGatewayException("Twilio unavailable"))
+                .when(smsGateway)
+                .sendSms(
+                        smsEntityMapped.getPhoneNumber(),
+                        smsEntityMapped.getMessage()
+                );
+
+        when(smsRepository.save(smsEntityMapped)).thenReturn(smsEntityUpdated);
+        when(smsMapper.toDTO(smsEntityUpdated)).thenReturn(smsErrorResponseDTO);
+
+        SmsResponseDTO dto = smsService.sendSms(smsRequestDTO);
+
+
+        assertAll(
+                () -> assertEquals(SmsStatusEnum.SEND_ERROR, smsEntityMapped.getStatus()),
+                () -> assertEquals(SmsStatusEnum.SEND_ERROR, dto.getStatus()),
+                () -> assertEquals(smsErrorResponseDTO.getMessage(), dto.getMessage())
+        );
+
+        verify(smsGateway)
+                .sendSms(
+                        smsEntityMapped.getPhoneNumber(),
+                        smsEntityMapped.getMessage()
+                );
+
+        verify(smsRepository).save(smsEntityMapped);
+        verify(smsMapper).toDTO(smsEntityUpdated);
+    }
+
+    @Test
+    @DisplayName("Must throw NotFoundException when SMS does not exist")
+    void mustThrowNotFoundWhenSmsDoesNotExist() {
+        Long unavailableId = -1L;
+        when(smsRepository.findById(unavailableId)).thenReturn(Optional.empty());
+
+        assertThrows(
+                NotFoundException.class,
+                () -> smsService.updateStatus(unavailableId,SmsStatusEnum.SEND_ERROR)
+        );
+
+        verify(smsRepository).findById(unavailableId);
+        verify(smsRepository, never()).save(any());
+        verify(smsMapper, never()).toDTO(any());
     }
 
     @Test
