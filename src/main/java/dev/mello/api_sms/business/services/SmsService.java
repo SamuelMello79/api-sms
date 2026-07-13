@@ -3,12 +3,13 @@ package dev.mello.api_sms.business.services;
 import dev.mello.api_sms.api.dtos.SmsRequestDTO;
 import dev.mello.api_sms.api.dtos.SmsResponseDTO;
 import dev.mello.api_sms.business.mappers.SmsMapper;
+import dev.mello.api_sms.infrastructure.config.DateTimeProvider;
 import dev.mello.api_sms.infrastructure.enums.SmsStatusEnum;
 import dev.mello.api_sms.infrastructure.entities.SmsEntity;
 import dev.mello.api_sms.infrastructure.exceptions.NotFoundException;
 import dev.mello.api_sms.infrastructure.exceptions.SmsGatewayException;
 import dev.mello.api_sms.infrastructure.gateway.SmsGateway;
-import dev.mello.api_sms.infrastructure.repositories.SmsMessageRepository;
+import dev.mello.api_sms.infrastructure.repositories.SmsRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
@@ -20,14 +21,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SmsService {
 
-    private final SmsMessageRepository repository;
+    private final SmsRepository repository;
+    private final DateTimeProvider dateTimeProvider;
     private final SmsGateway gateway;
     private final SmsMapper mapper;
 
     public SmsResponseDTO sendSms(SmsRequestDTO dto) {
         SmsEntity entity = mapper.toEntity(dto);
 
-        entity.setSentAt(LocalDateTime.now());
+        entity.setSentAt(dateTimeProvider.now());
 
         try {
             gateway.sendSms(
@@ -50,7 +52,7 @@ public class SmsService {
     }
 
     public List<SmsResponseDTO> findMessagesSentInLast24HoursByStatus(SmsStatusEnum status) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = dateTimeProvider.now();
         LocalDateTime twentyFourHoursAgo = now.minusHours(24);
 
         return repository.findBySentAtBetweenAndStatus(

@@ -1,4 +1,4 @@
-package dev.mello.api_sms.infrastructure.config;
+package dev.mello.api_sms.infrastructure.config.twilio;
 
 import com.twilio.Twilio;
 import org.springframework.context.annotation.Configuration;

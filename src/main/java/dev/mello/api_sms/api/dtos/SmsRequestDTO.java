@@ -16,6 +16,6 @@ public class SmsRequestDTO {
     private String phoneNumber;
 
     @NotEmpty(message = "The message can't be empty")
-    @Max(value = 155, message = "The message can't exceed the limit of 155 characters")
+    @Size(max = 155, message = "The message can't exceed the limit of 155 characters")
     private String message;
 }

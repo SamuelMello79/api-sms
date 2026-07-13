@@ -1,10 +1,8 @@
 package dev.mello.api_sms.infrastructure.gateway;
 
-import dev.mello.api_sms.infrastructure.config.TwilioConfiguration;
+import dev.mello.api_sms.infrastructure.config.twilio.TwilioConfiguration;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
 

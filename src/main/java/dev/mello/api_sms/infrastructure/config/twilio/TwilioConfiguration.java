@@ -1,4 +1,4 @@
-package dev.mello.api_sms.infrastructure.config;
+package dev.mello.api_sms.infrastructure.config.twilio;
 
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;

@@ -3,11 +3,13 @@ package dev.mello.api_sms.api;
 import dev.mello.api_sms.api.dtos.ErrorResponseDTO;
 import dev.mello.api_sms.infrastructure.exceptions.BadRequestException;
 import dev.mello.api_sms.infrastructure.exceptions.NotFoundException;
+import dev.mello.api_sms.infrastructure.exceptions.SmsGatewayException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,9 +26,15 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<ErrorResponseDTO> handlerNotFoundException(BadRequestException ex) {
+    public ResponseEntity<ErrorResponseDTO> handlerBadRequestException(BadRequestException ex) {
         return ResponseEntity.status(BAD_REQUEST)
-                .body(build(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage()));
+                .body(build(BAD_REQUEST, "Bad Request", ex.getMessage()));
+    }
+
+    @ExceptionHandler(SmsGatewayException.class)
+    public ResponseEntity<ErrorResponseDTO> handlerSmsGatewayException(SmsGatewayException ex) {
+        return ResponseEntity.status(BAD_GATEWAY)
+                .body(build(BAD_GATEWAY, "Gateway Error", ex.getMessage()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -36,14 +44,26 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponseDTO> handlerMethodArgumentValidException(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ErrorResponseDTO> handlerMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         List<String> errors = ex.getBindingResult().getFieldErrors()
                 .stream()
                 .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
                 .toList();
 
         return ResponseEntity.status(BAD_REQUEST)
-                .body(build(BAD_REQUEST, "Validation Failed", ex.getMessage(), errors));
+                .body(build(BAD_REQUEST, "Validation Failed", "One or more fields are invalid", errors));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponseDTO> handlerMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex) {
+        String message = String.format(
+                "Invalid value '%s' for parameter '%s'",
+                ex.getValue(),
+                ex.getName()
+        );
+
+        return ResponseEntity.status(BAD_REQUEST)
+                .body(build(BAD_REQUEST, "Bad Request", message));
     }
 
     @ExceptionHandler(Exception.class)
