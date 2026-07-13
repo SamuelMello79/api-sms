@@ -7,7 +7,6 @@ import dev.mello.api_sms.api.dto.SmsResponseDTOFixture;
 import dev.mello.api_sms.api.dtos.SmsRequestDTO;
 import dev.mello.api_sms.api.dtos.SmsResponseDTO;
 import dev.mello.api_sms.business.services.SmsService;
-import dev.mello.api_sms.infrastructure.entities.SmsEntity;
 import dev.mello.api_sms.infrastructure.enums.SmsStatusEnum;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,7 +17,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDateTime;
@@ -45,16 +43,10 @@ public class SmsControllerTest {
 
     private String url;
 
-    private SmsEntity smsEntitySaved;
-    private SmsEntity smsEntitySaved2;
-    private SmsEntity smsEntityUpdated;
-    private List<SmsEntity> smsEntityList;
-
     private SmsRequestDTO smsRequestDTO;
     private SmsResponseDTO smsResponseDTO;
     private SmsResponseDTO smsResponseDTO2;
     private SmsResponseDTO smsResponseDTOUpdated;
-    private SmsResponseDTO smsErrorResponseDTO;
     private List<SmsResponseDTO> smsResponseDTOList;
 
     @BeforeEach
@@ -68,30 +60,6 @@ public class SmsControllerTest {
         objectMapper.registerModule(new JavaTimeModule());
 
         url = "";
-
-        smsEntitySaved = SmsEntity.builder()
-                .id(1L)
-                .phoneNumber("15996669999")
-                .message("Hello")
-                .status(SmsStatusEnum.SENT)
-                .sentAt(LocalDateTime.parse("2026-07-11T14:36:00"))
-                .build();
-
-        smsEntitySaved2 = SmsEntity.builder()
-                .id(2L)
-                .phoneNumber("16996669999")
-                .message("Hello")
-                .status(SmsStatusEnum.SENT)
-                .sentAt(LocalDateTime.parse("2026-07-11T15:13:00"))
-                .build();
-
-        smsEntityUpdated = SmsEntity.builder()
-                .id(1L)
-                .phoneNumber("15996669999")
-                .message("Hello")
-                .status(SmsStatusEnum.SEND_ERROR)
-                .sentAt(LocalDateTime.parse("2026-07-11T14:36:00"))
-                .build();
 
         smsRequestDTO = SmsRequestDTOFixture.build(
                 "15996669999",
@@ -123,11 +91,6 @@ public class SmsControllerTest {
                 LocalDateTime.parse("2026-07-11T14:36:00")
         );
 
-        smsEntityList = List.of(
-                smsEntitySaved,
-                smsEntitySaved2
-        );
-
         smsResponseDTOList = List.of(
                 smsResponseDTO,
                 smsResponseDTO2
@@ -154,6 +117,31 @@ public class SmsControllerTest {
                 .andExpect(jsonPath("$.sentAt").value("2026-07-11T14:36:00"));
 
         verify(smsService).sendSms(any(SmsRequestDTO.class));
+    }
+
+    @Test
+    @DisplayName("POST - Must return 400 when message is invalid")
+    void mustReturn400WhenMessageIsInvalid() throws Exception {
+
+        SmsRequestDTO invalidRequest =
+                SmsRequestDTOFixture.build(
+                        "15996669999",
+                        "a".repeat(156));
+
+
+        mockMvc.perform(post("")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidRequest)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("PATCH - Must return 400 when status is invalid")
+    void mustReturn400WhenStatusInvalid() throws Exception {
+
+        mockMvc.perform(patch("/{id}/update", 1L)
+                        .param("status", "INVALID"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
