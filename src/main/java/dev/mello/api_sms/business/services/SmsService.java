@@ -4,6 +4,7 @@ import dev.mello.api_sms.api.dtos.SmsRequestDTO;
 import dev.mello.api_sms.api.dtos.SmsResponseDTO;
 import dev.mello.api_sms.business.mappers.SmsMapper;
 import dev.mello.api_sms.infrastructure.config.DateTimeProvider;
+import dev.mello.api_sms.infrastructure.config.PhoneNumberValidator;
 import dev.mello.api_sms.infrastructure.enums.SmsStatusEnum;
 import dev.mello.api_sms.infrastructure.entities.SmsEntity;
 import dev.mello.api_sms.infrastructure.exceptions.NotFoundException;
@@ -11,7 +12,6 @@ import dev.mello.api_sms.infrastructure.exceptions.SmsGatewayException;
 import dev.mello.api_sms.infrastructure.gateway.SmsGateway;
 import dev.mello.api_sms.infrastructure.repositories.SmsRepository;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -25,11 +25,15 @@ public class SmsService {
     private final DateTimeProvider dateTimeProvider;
     private final SmsGateway gateway;
     private final SmsMapper mapper;
+    private final PhoneNumberValidator phoneNumberValidator;
 
     public SmsResponseDTO sendSms(SmsRequestDTO dto) {
         SmsEntity entity = mapper.toEntity(dto);
 
         entity.setSentAt(dateTimeProvider.now());
+        entity.setPhoneNumber(
+                phoneNumberValidator.normalize(entity.getPhoneNumber())
+        );
 
         try {
             gateway.sendSms(

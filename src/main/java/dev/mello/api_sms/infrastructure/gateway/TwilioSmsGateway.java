@@ -16,17 +16,9 @@ public class TwilioSmsGateway implements SmsGateway {
     @Override
     public void sendSms(String phoneNumber, String message) {
         Message.creator(
-                new PhoneNumber(formatPhoneNumber(phoneNumber)),
+                new PhoneNumber(phoneNumber),
                 new PhoneNumber(twilioConfiguration.getTrialNumber()),
                 message
         ).create();
-    }
-
-    private String formatPhoneNumber(String phoneNumber) {
-        if (phoneNumber.startsWith("+55")) {
-            return phoneNumber;
-        }
-
-        return "+55" + phoneNumber;
     }
 }
