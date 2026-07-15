@@ -69,7 +69,7 @@ public class SmsControllerTest {
 
         smsResponseDTO = SmsResponseDTOFixture.build(
                 1L,
-                "15996669999",
+                "+5515996669999",
                 "Hello",
                 SmsStatusEnum.SENT,
                 LocalDateTime.parse("2026-07-11T14:36:00")
@@ -77,7 +77,7 @@ public class SmsControllerTest {
 
         smsResponseDTO2 = SmsResponseDTOFixture.build(
                 2L,
-                "16996669999",
+                "+5516996669999",
                 "Hello",
                 SmsStatusEnum.SENT,
                 LocalDateTime.parse("2026-07-11T15:13:00")
@@ -85,7 +85,7 @@ public class SmsControllerTest {
 
         smsResponseDTOUpdated = SmsResponseDTOFixture.build(
                 1L,
-                "15996669999",
+                "+5515996669999",
                 "Hello",
                 SmsStatusEnum.SEND_ERROR,
                 LocalDateTime.parse("2026-07-11T14:36:00")
@@ -111,7 +111,7 @@ public class SmsControllerTest {
                 .content(json))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.phoneNumber").value("15996669999"))
+                .andExpect(jsonPath("$.phoneNumber").value("+5515996669999"))
                 .andExpect(jsonPath("$.message").value("Hello"))
                 .andExpect(jsonPath("$.status").value("SENT"))
                 .andExpect(jsonPath("$.sentAt").value("2026-07-11T14:36:00"));
@@ -154,7 +154,7 @@ public class SmsControllerTest {
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value( 1L))
-                .andExpect(jsonPath("$.phoneNumber").value("15996669999"))
+                .andExpect(jsonPath("$.phoneNumber").value("+5515996669999"))
                 .andExpect(jsonPath("$.message").value("Hello"))
                 .andExpect(jsonPath("$.status").value("SEND_ERROR"))
                 .andExpect(jsonPath("$.sentAt").value("2026-07-11T14:36:00"));
@@ -174,10 +174,10 @@ public class SmsControllerTest {
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].id").value(1L))
-                .andExpect(jsonPath("$[0].phoneNumber").value("15996669999"))
+                .andExpect(jsonPath("$[0].phoneNumber").value("+5515996669999"))
                 .andExpect(jsonPath("$[0].status").value("SENT"))
                 .andExpect(jsonPath("$[1].id").value(2L))
-                .andExpect(jsonPath("$[1].phoneNumber").value("16996669999"))
+                .andExpect(jsonPath("$[1].phoneNumber").value("+5516996669999"))
                 .andExpect(jsonPath("$[1].status").value("SENT"));
 
         verify(smsService).findMessagesSentInLast24HoursByStatus(SmsStatusEnum.SENT);

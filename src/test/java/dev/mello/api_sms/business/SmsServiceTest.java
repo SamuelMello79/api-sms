@@ -7,6 +7,7 @@ import dev.mello.api_sms.api.dtos.SmsResponseDTO;
 import dev.mello.api_sms.business.mappers.SmsMapper;
 import dev.mello.api_sms.business.services.SmsService;
 import dev.mello.api_sms.infrastructure.config.DateTimeProvider;
+import dev.mello.api_sms.infrastructure.config.PhoneNumberValidator;
 import dev.mello.api_sms.infrastructure.entities.SmsEntity;
 import dev.mello.api_sms.infrastructure.enums.SmsStatusEnum;
 import dev.mello.api_sms.infrastructure.exceptions.NotFoundException;
@@ -39,6 +40,9 @@ public class SmsServiceTest {
     private DateTimeProvider dateTimeProvider;
 
     @Mock
+    private PhoneNumberValidator phoneNumberValidator;
+
+    @Mock
     private SmsGateway smsGateway;
 
     @Mock
@@ -69,7 +73,7 @@ public class SmsServiceTest {
 
         smsEntitySaved = SmsEntity.builder()
                 .id(1L)
-                .phoneNumber("15996669999")
+                .phoneNumber("+5515996669999")
                 .message("Hello")
                 .status(SmsStatusEnum.SENT)
                 .sentAt(LocalDateTime.parse("2026-07-11T14:36:00"))
@@ -77,7 +81,7 @@ public class SmsServiceTest {
 
         smsEntitySaved2 = SmsEntity.builder()
                 .id(2L)
-                .phoneNumber("16996669999")
+                .phoneNumber("+5516996669999")
                 .message("Hello")
                 .status(SmsStatusEnum.SENT)
                 .sentAt(LocalDateTime.parse("2026-07-11T15:13:00"))
@@ -85,7 +89,7 @@ public class SmsServiceTest {
 
         smsEntityUpdated = SmsEntity.builder()
                 .id(1L)
-                .phoneNumber("15996669999")
+                .phoneNumber("+5515996669999")
                 .message("Hello")
                 .status(SmsStatusEnum.SEND_ERROR)
                 .sentAt(LocalDateTime.parse("2026-07-11T14:36:00"))
@@ -99,7 +103,7 @@ public class SmsServiceTest {
 
         smsResponseDTO = SmsResponseDTOFixture.build(
                 1L,
-                "15996669999",
+                "+5515996669999",
                 "Hello",
                 SmsStatusEnum.SENT,
                 LocalDateTime.parse("2026-07-11T14:36:00")
@@ -107,7 +111,7 @@ public class SmsServiceTest {
 
         smsResponseDTO2 = SmsResponseDTOFixture.build(
                 2L,
-                "16996669999",
+                "+5516996669999",
                 "Hello",
                 SmsStatusEnum.SENT,
                 LocalDateTime.parse("2026-07-11T15:13:00")
@@ -115,7 +119,7 @@ public class SmsServiceTest {
 
         smsResponseDTOUpdated = SmsResponseDTOFixture.build(
                 1L,
-                "15996669999",
+                "+5515996669999",
                 "Hello",
                 SmsStatusEnum.SEND_ERROR,
                 LocalDateTime.parse("2026-07-11T14:36:00")
@@ -123,7 +127,7 @@ public class SmsServiceTest {
 
         smsErrorResponseDTO = SmsResponseDTOFixture.build(
                 1L,
-                "15996669999",
+                "+5515996669999",
                 "Hello",
                 SmsStatusEnum.SEND_ERROR,
                 LocalDateTime.parse("2026-07-11T14:36:00")
@@ -144,13 +148,17 @@ public class SmsServiceTest {
     @DisplayName("Must sent SMS message with success")
     void mustSendSmsMessageWithSuccess() {
         when(smsMapper.toEntity(smsRequestDTO)).thenReturn(smsEntityMapped);
+        when(dateTimeProvider.now()).thenReturn(LocalDateTime.parse("2026-07-07T14:36:00"));
+        when(phoneNumberValidator.normalize(smsEntityMapped.getPhoneNumber()))
+                .thenReturn("+55" + smsEntityMapped.getPhoneNumber());
         when(smsRepository.save(smsEntityMapped)).thenReturn(smsEntitySaved);
         when(smsMapper.toDTO(smsEntitySaved)).thenReturn(smsResponseDTO);
+
 
         doNothing()
                 .when(smsGateway)
                 .sendSms(
-                        smsEntityMapped.getPhoneNumber(),
+                        "+55" + smsEntityMapped.getPhoneNumber(),
                         smsEntityMapped.getMessage()
                 );
 
@@ -170,19 +178,22 @@ public class SmsServiceTest {
                         smsEntityMapped.getPhoneNumber(),
                         smsEntityMapped.getMessage()
                 );
+        verify(smsRepository).save(smsEntityMapped);
+        verify(smsMapper).toDTO(smsEntitySaved);
     }
 
     @Test
     @DisplayName("Must save SMS with SEND_ERROR when gateway fails")
     void mustSaveSmsWithErrorWhenGatewayFails() {
-
-        when(smsMapper.toEntity(smsRequestDTO))
-                .thenReturn(smsEntityMapped);
+        when(smsMapper.toEntity(smsRequestDTO)).thenReturn(smsEntityMapped);
+        when(dateTimeProvider.now()).thenReturn(LocalDateTime.parse("2026-07-07T14:36:00"));
+        when(phoneNumberValidator.normalize(smsEntityMapped.getPhoneNumber()))
+                .thenReturn("+55" + smsEntityMapped.getPhoneNumber());
 
         doThrow(new SmsGatewayException("Twilio unavailable"))
                 .when(smsGateway)
                 .sendSms(
-                        smsEntityMapped.getPhoneNumber(),
+                        "+55" + smsEntityMapped.getPhoneNumber(),
                         smsEntityMapped.getMessage()
                 );
 
@@ -203,9 +214,9 @@ public class SmsServiceTest {
                         smsEntityMapped.getPhoneNumber(),
                         smsEntityMapped.getMessage()
                 );
-
         verify(smsRepository).save(smsEntityMapped);
         verify(smsMapper).toDTO(smsEntityUpdated);
+        verify(phoneNumberValidator).normalize(smsRequestDTO.getPhoneNumber());
     }
 
     @Test
@@ -272,4 +283,6 @@ public class SmsServiceTest {
         verify(smsRepository).findBySentAtBetweenAndStatus(twentyFourHoursAgo, now, status);
         verify(smsMapper, times(2)).toDTO(any(SmsEntity.class));
     }
+
+    // TODO: implement a new module to test the checks of the PhoneNumberValidator
 }
